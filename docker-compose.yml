@@ -7,7 +7,9 @@ services:
       - "8000:8000"
     command: python /project/api_webstore/manage.py runserver 0.0.0.0:8000
     entrypoint: >
-      sh -c "python api_webstore/manage.py migrate &&
+      sh -c "python api_webstore/manage.py makemigrations &&
+             python api_webstore/manage.py migrate &&
+             python api_webstore/manage.py loaddata api_webstore/datadump.json &&
              echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', '', 'python')\" |
              python api_webstore/manage.py shell &&
              python api_webstore/manage.py runserver 0.0.0.0:8000"

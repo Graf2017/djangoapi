@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'api_webstore.wsgi.application'
 #         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
 #     }
 # }
-#
+
 
 DATABASES = {
     'default': {
@@ -92,7 +92,7 @@ DATABASES = {
         'NAME': 'base_app_db',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'db_postgresql',
+        'HOST': 'db_postgresql', # db_postgresql
         'PORT': '5432',
     }
 }

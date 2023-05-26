@@ -6,7 +6,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view as get_schema_views
 from base_app.views import *
 
-schema_view = get_schema_views(
+schema_view = get_schema_views(  # add openapi documentation
     openapi.Info(
         title="eCommerce",
         default_version="1.0.0",
