@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    command: python /project/api_webstore/manage.py runserver 0.0.0.0:8000
+    entrypoint: >
+      sh -c "python api_webstore/manage.py migrate &&
+             echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', '', 'python')\" |
+             python api_webstore/manage.py shell &&
+             python api_webstore/manage.py runserver 0.0.0.0:8000"
+    
+
+    depends_on:
+      - db_postgresql
+  db_postgresql:
+    image: postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: base_app_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

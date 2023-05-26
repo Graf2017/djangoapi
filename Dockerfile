@@ -1,8 +1,13 @@
 FROM python:3.9-alpine3.16
 
-COPY requirements.txt /temp/requirements.txt
-COPY api_webstore /api_marketplace
-WORKDIR /service
+WORKDIR /project
+
+COPY . .
+
+#RUN pip install --upgrade pip
+
+RUN pip install -r requirements.txt
+
 EXPOSE 8000
 
 

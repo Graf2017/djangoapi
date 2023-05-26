@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'base_app.apps.BaseAppConfig',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
     'djoser',
     'django_filters',
 
@@ -91,7 +92,7 @@ DATABASES = {
         'NAME': 'base_app_db',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
-        'HOST': 'localhost',
+        'HOST': 'db_postgresql',
         'PORT': '5432',
     }
 }
