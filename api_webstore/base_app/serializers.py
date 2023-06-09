@@ -9,15 +9,7 @@ class PositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Position
-        fields = "title", "brand", "id", "photo", "price", "description", "categories_id"
-
-    def update(self, instance, validated_data):
-        photo = validated_data.pop('photo', None)
-        instance = super().update(instance, validated_data)
-        if photo is not None:
-            instance.photo = photo
-            instance.save()
-        return instance
+        fields = "title", "brand", "id", "images", "price", "description", "categories_id"
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -27,21 +19,28 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
 
 class CategoryListSerializer(serializers.ModelSerializer):  # list of all category's products
+    images = serializers.SerializerMethodField(method_name='get_images')
+
     class Meta:
         model = Position
-        fields = "title", "brand", "id", "photo", "price", "description", "categories_id"
+        fields = "title", "brand", "id", "images", "price", "description", "categories_id"
 
+    def get_images(self, obj):
+        return [image.image.url for image in obj.images.all()]
 
 # user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 # email = serializers.CharField(source='user.email') #витягуємо мило з базового класу юзера
 
+
 class ClientSerializer(serializers.ModelSerializer):
-    basket = serializers.SerializerMethodField(method_name='get_position')  # get title from Position, not id
 
     class Meta:
         model = Client
-        fields = "user", "basket"
+        fields = "id", "user", "basket"
 
-    def get_position(self, obj):  # all positions of basket of the client
-        all_basket = Client.objects.get(id=obj.id).basket.all()
-        return all_basket.values()
+
+class OrdersSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Order
+        fields = "id", "client", "order_list", "status", "date_create"

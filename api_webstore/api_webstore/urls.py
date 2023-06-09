@@ -17,10 +17,9 @@ schema_view = get_schema_views(  # add openapi documentation
 
 router = routers.DefaultRouter()
 router.register(r'positions', ShowPositions, basename='positions')
-router.register(r'moderate', ModeratePositions, basename='moderate_positions')
 router.register(r'basket', ShowBasket, basename='basket')
 router.register(r'categories', ShowCategories, basename='show_categories')
-
+router.register(r'orders', ShowOrders, basename='history')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/',
@@ -30,7 +29,7 @@ urlpatterns = [
              path('auth/session/', include('rest_framework.urls')),  # /api/auth/session/login/
              path('auth/', include('djoser.urls')),
              path('auth/', include('djoser.urls.authtoken')),  # /api/auth/token/login/
-             path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name="swagger-schema")
+             path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name="swagger-schema"),
          ])
          ),
 ]
