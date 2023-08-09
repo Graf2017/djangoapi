@@ -5,3 +5,8 @@ The order system was designed by me, but it may and will be modified in the futu
 The default email - test@gmail.com, and the password - python
 
 If you want to see this project in action, a good option would be to use docker-compose.
+
+> docke-compose up
+
+Documentation:
+http://127.0.0.1:8000/api/v1/swagger/
