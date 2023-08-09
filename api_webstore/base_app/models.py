@@ -1,5 +1,9 @@
-from django.contrib.auth.models import User
-from django.db import models, transaction
+import os
+
+from django.contrib.auth.models import User, AbstractUser, UserManager
+from django.contrib.auth.base_user import BaseUserManager
+from django.db import models
+from decimal import Decimal
 
 
 class Position(models.Model):  # a product's position
@@ -15,7 +19,6 @@ class Position(models.Model):  # a product's position
                              blank=True)
     description = models.CharField(max_length=500,
                                    verbose_name='Describe')
-    #    photos = models.ManyToManyField('Photo', verbose_name='Photos', blank=True)
     price = models.DecimalField(decimal_places=2,
                                 max_digits=10,
                                 verbose_name='Price')
@@ -29,8 +32,10 @@ class Position(models.Model):  # a product's position
                                    verbose_name='In stock')
     categories = models.ForeignKey('Categories',
                                    on_delete=models.PROTECT,
-                                   verbose_name='Category ',
+                                   verbose_name='Category',
                                    related_name='Category')
+    deleted = models.BooleanField(default=False,
+                                  verbose_name='Deleted')
 
     def __str__(self):
         return f'{self.id}: {self.title}'
@@ -44,12 +49,24 @@ class Position(models.Model):  # a product's position
         ordering = ["id"]
 
 
+def image_upload_path(instance, filename):  # directories will have name from id of position
+    position_id = str(instance.position.id)
+    upload_path = os.path.join("photos", position_id, filename)
+    return upload_path
+
+
+def categories_image_upload_path(instance, filename):  # directories will have name from id of categories
+    category_id = str(instance.id)
+    upload_path = os.path.join("photos/categories", category_id, filename)
+    return upload_path
+
+
 class Image(models.Model):  # images for a position
     position = models.ForeignKey('Position',
                                  on_delete=models.CASCADE,
                                  verbose_name='Position',
                                  related_name='images')
-    image = models.ImageField(upload_to="photos/%Y/%m/",
+    image = models.ImageField(upload_to=image_upload_path,
                               verbose_name='Image',
                               blank=True)
 
@@ -61,6 +78,9 @@ class Categories(models.Model):  # category of the position
                             db_index=True,
                             unique=True,
                             verbose_name='Slugs URL')
+    image = models.ImageField(upload_to=categories_image_upload_path,
+                              verbose_name='Image',
+                              blank=True)
 
     def __str__(self):
         return self.name
@@ -71,38 +91,51 @@ class Categories(models.Model):  # category of the position
         ordering = ["name"]
 
 
-class Client(models.Model):  # a client
-    user = models.OneToOneField(User,
-                                on_delete=models.CASCADE,
-                                related_name='client')
-    basket = models.ManyToManyField('Position',
-                                    default=None,
-                                    blank=True)
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError('Email is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, **extra_fields)
+
+    def get_by_natural_key(self, email):
+        return self.get(email=email)
+
+
+class CustomUser(AbstractUser):
+    """використовуємо емейл як основну для адкаунта юзера"""
+    username = None
+    email = models.EmailField(unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    objects = CustomUserManager()
 
     def __str__(self):
-        return f'{self.user.username}, id-{self.user.id}'
-
-    def confirm_order(self):
-        with transaction.atomic():  # need to
-            order = Order.objects.create(client=self)
-            order.order_list.set(self.basket.all())
-            self.basket.clear()
-            order.status = 'Confirmed'
-            order.save()
+        return f'{self.email}, id - {self.id}'
 
     def get_order_history(self):
         return self.orders.all()
 
+    def get_cart(self):
+        return self.cart.all()
 
-class Order(models.Model):  # ordered position from basket
-    client = models.ForeignKey('Client',
-                               on_delete=models.PROTECT,
-                               verbose_name='Order',
-                               related_name='orders',
-                               editable=False)
-    order_list = models.ManyToManyField('Position',
-                                        verbose_name='Order List',
-                                        blank=True)
+
+class Order(models.Model):
+    user = models.ForeignKey('CustomUser',
+                             on_delete=models.CASCADE,
+                             verbose_name='Order',
+                             related_name='orders',
+                             editable=False)
     status = models.CharField(max_length=20,
                               choices=(
                                   ('Pending', 'Pending'),
@@ -116,7 +149,67 @@ class Order(models.Model):  # ordered position from basket
     date_update = models.DateTimeField(auto_now=True,
                                        verbose_name='Last update')
 
+    @property
+    def saved_total_price(self):
+        return sum(item.saved_total_price for item in self.order_item.all())
+
     def __str__(self):
-        return f'Order №- {self.id} |' \
-               f' - Client: {self.client.user.username} id-{self.client.user.id}' \
+        return f'Order № - {self.id} |' \
+               f' - User: {self.user.email} id-{self.user.id}' \
                f' | - Status: {self.status}'
+
+
+class OrderItem(models.Model):  # save the data of a Position in the time of ordering
+    order = models.ForeignKey('Order',
+                              on_delete=models.CASCADE,
+                              related_name='order_item')
+    position = models.ForeignKey('Position',
+                                 on_delete=models.DO_NOTHING,
+                                 related_name='+')
+    quantity = models.PositiveSmallIntegerField()
+    saved_title = models.CharField(max_length=150, blank=True)
+    saved_price = models.DecimalField(decimal_places=2, max_digits=10, blank=True)
+    saved_total_price = models.DecimalField(decimal_places=2, max_digits=10, blank=True)
+
+    def save(self, *args, **kwargs):  # при створенні обєкта автоматично заповнюються решта даних
+        self.saved_title = self.position.title
+        self.saved_price = self.position.price
+        self.saved_total_price = self.position.price * self.quantity
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.position.id}. Saved title: {self.saved_title}. Price: {self.saved_price} x {self.quantity}шт. ' \
+               f'Saved total price{self.saved_total_price}'
+
+
+class Cart(models.Model):
+    user = models.ForeignKey('CustomUser',
+                             on_delete=models.CASCADE,
+                             verbose_name='Carts',
+                             related_name='cart',
+                             editable=False)
+
+    def __str__(self):
+        return f'{self.user.email} id-{self.user.id}'
+
+    @property
+    def total_price(self):
+        return sum(item.total_price for item in self.cart_items.all())
+
+
+class CartItem(models.Model):
+    position = models.ForeignKey('Position',
+                                 on_delete=models.DO_NOTHING,
+                                 related_name='+')
+    quantity = models.PositiveSmallIntegerField(default=0)
+    cart = models.ForeignKey('Cart',
+                             on_delete=models.CASCADE,
+                             related_name='cart_items')
+
+    def __str__(self):
+        return f'{self.position.id}: {self.position.title}- {self.quantity}'
+
+    @property
+    def total_price(self):
+        total_price = self.position.price * self.quantity
+        return total_price

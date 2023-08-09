@@ -4,7 +4,6 @@ WORKDIR /project
 
 COPY . .
 
-#RUN pip install --upgrade pip
 RUN apk add --no-cache build-base
 
 RUN pip install -r requirements.txt
