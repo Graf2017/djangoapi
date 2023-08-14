@@ -19,6 +19,7 @@ router = routers.DefaultRouter()
 router.register(r'positions', ShowPositions, basename='positions')
 router.register(r'categories', ShowCategories, basename='show_categories')
 router.register(r'orders', ShowOrders, basename='history')
+router.register(r'delivery', ShowDelivery, basename='delivery')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/',

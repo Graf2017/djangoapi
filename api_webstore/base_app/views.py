@@ -21,6 +21,9 @@ class ApiPagination(PageNumberPagination):
 
 
 class ShowPositions(viewsets.ReadOnlyModelViewSet):  # return all product positions or one position
+    """Using 'post' method to add a position to the user's cart.
+    Using 'get' method to return all product positions or one position.
+    """
     queryset = Position.objects.filter(is_published=True, deleted=False, in_stock=True)
     serializer_class = PositionSerializer
     pagination_class = ApiPagination
@@ -84,26 +87,35 @@ class ShowCart(APIView):
         return Response(CartSerializer(cart, many=False, context={'request': request}).data)
 
     def post(self, request):
+        user = self.request.user
+        delivery_data = request.data.get('delivery')
+        delivery, created = user.delivery.get_or_create(
+            first_name=delivery_data.get('first_name'),
+            last_name=delivery_data.get('last_name'),
+            phone=delivery_data.get('phone'),
+            index=delivery_data.get('index'),
+            city=delivery_data.get('city'),
+            address=delivery_data.get('address')
+        )
         cart_items = self.get_queryset()
-        print(cart_items)
         if cart_items.first() is None or not cart_items.exists():
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         with transaction.atomic():
-            order = Order.objects.create(user=self.request.user)
+            order = Order.objects.create(user=user, delivery=delivery)
+            # order.delivery = delivery
             for cart_item in cart_items:
                 OrderItem.objects.create(
                     order=order,
                     position=cart_item.position,
                     quantity=cart_item.quantity,
                     saved_title=cart_item.position.title,
-                    saved_price=cart_item.position.price,
+                    saved_price=cart_item.position.price
                 )
 
             cart_items.delete()
 
         serializer = OrdersSerializer(order, many=False, context={'request': request})
-        print(order)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def put(self, request, *args, **kwargs):
@@ -144,6 +156,19 @@ class ShowCart(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+class CreateDelivery(mixins.CreateModelMixin, viewsets.GenericViewSet):  # create delivery address
+    serializer_class = DeliverySerializer
+    permission_classes = (IsOwnerOrAdmin,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.delivery
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.save(user=user)
+
+
 class ShowOrders(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):  # show the user's order history
     serializer_class = OrdersSerializer
     permission_classes = (IsOwnerOrAdmin,)
@@ -158,3 +183,11 @@ class ShowOrders(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.Gene
 
         return queryset
 
+
+class ShowDelivery(viewsets.ModelViewSet):
+    serializer_class = DeliverySerializer
+    permission_classes = (IsOwnerOrAdmin,)
+
+    def get_queryset(self):
+        user = self.request.user
+        return user.delivery

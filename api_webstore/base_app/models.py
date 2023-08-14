@@ -130,12 +130,41 @@ class CustomUser(AbstractUser):
         return self.cart.all()
 
 
+class Delivery(models.Model):
+    user = models.ForeignKey('CustomUser',
+                             on_delete=models.CASCADE,
+                             verbose_name='Delivery',
+                             related_name='delivery',
+                             editable=False)
+    first_name = models.CharField(max_length=50,
+                                  verbose_name='First name')
+    last_name = models.CharField(max_length=50,
+                                 verbose_name='Last name')
+    phone = models.CharField(max_length=15,
+                             verbose_name='Phone number')
+    city = models.CharField(max_length=50,
+                            verbose_name='City')
+    address = models.CharField(max_length=100,
+                               verbose_name='Address')
+    index = models.CharField(max_length=10,
+                             verbose_name='Index',
+                             blank=True)
+
+    def __str__(self):
+        return f'{self.first_name} {self.last_name} - {self.phone}, {self.address}, {self.city}, {self.index}'
+
+
 class Order(models.Model):
     user = models.ForeignKey('CustomUser',
                              on_delete=models.CASCADE,
                              verbose_name='Order',
                              related_name='orders',
                              editable=False)
+    delivery = models.ForeignKey('Delivery',
+                                 on_delete=models.CASCADE,
+                                 verbose_name='Delivery',
+                                 related_name='delivery',
+                                 )
     status = models.CharField(max_length=20,
                               choices=(
                                   ('Pending', 'Pending'),
@@ -143,6 +172,7 @@ class Order(models.Model):
                                   ('Shipped', 'Shipped'),
                                   ('Delivered', 'Delivered'),
                                   ('Finished', 'Finished'),
+                                  ('Canceled', 'Canceled'),
                               ), default='Pending')
     date_create = models.DateTimeField(auto_now_add=True,
                                        verbose_name='Date create')
@@ -179,7 +209,7 @@ class OrderItem(models.Model):  # save the data of a Position in the time of ord
 
     def __str__(self):
         return f'{self.position.id}. Saved title: {self.saved_title}. Price: {self.saved_price} x {self.quantity}шт. ' \
-               f'Saved total price{self.saved_total_price}'
+               f'Saved total price - {self.saved_total_price}'
 
 
 class Cart(models.Model):

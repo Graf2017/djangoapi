@@ -14,7 +14,7 @@ class PositionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Position
-        fields = "title", "brand", "id", "images", "price", "description", "categories_id"
+        fields = "id", "title", "brand", "description", "images", "price", "categories_id"
 
     def get_images(self, obj):
         return get_image_url(self, obj)
@@ -31,7 +31,7 @@ class CategoryListSerializer(serializers.ModelSerializer):  # list of all catego
 
     class Meta:
         model = Position
-        fields = "title", "brand", "id", "images", "price", "description", "categories_id"
+        fields = "id", "title", "brand", "description", "images", "price", "categories_id"
 
     def get_images(self, obj):
         return get_image_url(self, obj)
@@ -48,26 +48,34 @@ class CartItemSerializer(serializers.ModelSerializer):
         fields = "__all__"
         
 
-class CartSerializer(serializers.ModelSerializer):
-    cart_items = CartItemSerializer(many=True, read_only=True)
-
+class DeliverySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Cart
+        model = Delivery
         fields = "__all__"
 
 
-# class CreateOrderSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Order
-#         fields = "__all__"
+class CartSerializer(serializers.ModelSerializer):
+    cart_items = CartItemSerializer(many=True, read_only=True)
+    delivery = DeliverySerializer(many=True, allow_null=True, read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = "id", "user", "total_price", "cart_items", "delivery"
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    position = PositionSerializer(read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = "__all__"
 
 
 class OrdersSerializer(serializers.ModelSerializer):
-    order_items = serializers.SerializerMethodField(method_name='get_order_items')
+    order_items = OrderItemSerializer(many=True, read_only=True, source='order_item')
+    delivery = DeliverySerializer(read_only=True)
 
     class Meta:
         model = Order
-        fields = "id", "user", "order_items", "saved_total_price", "status", "date_create"
+        fields = "id", "user", "order_items", "saved_total_price", "status", "date_create", "delivery"
 
-    def get_order_items(self, obj):
-        return [order_item.position.title for order_item in obj.order_item.all()]

@@ -103,9 +103,9 @@ class OrderItemInline(admin.StackedInline):
 
 class OrderAdmin(admin.ModelAdmin):
     # form = OrderAdminForm
-    fields = ['status', 'user', 'date_update', 'date_create', 'saved_total_price']
+    fields = ['status', 'user', 'date_update', 'date_create', 'saved_total_price', 'delivery']
     list_display = ['id', 'status', 'date_update', 'date_create']
-    list_display_links = ['id']
+    list_display_links = ['id', 'status']
     search_fields = ['date_create', 'status', 'date_update', 'date_create']
     inlines = [OrderItemInline]
 
@@ -124,7 +124,7 @@ class OrderAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj and isinstance(obj, Order):
             return (
-                'date_create', 'user', 'date_update',
+                'date_create', 'user', 'date_update', 'delivery',
                 'saved_total_price')  # Make date_create and total_price fields read-only for existing orders
         return ('date_create',)
 
