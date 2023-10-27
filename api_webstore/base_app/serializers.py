@@ -46,21 +46,12 @@ class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = "__all__"
-        
+
 
 class DeliverySerializer(serializers.ModelSerializer):
     class Meta:
         model = Delivery
         fields = "__all__"
-
-
-class CartSerializer(serializers.ModelSerializer):
-    cart_items = CartItemSerializer(many=True, read_only=True)
-    delivery = DeliverySerializer(many=True, allow_null=True, read_only=True)
-
-    class Meta:
-        model = Cart
-        fields = "id", "user", "total_price", "cart_items", "delivery"
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -71,11 +62,67 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class OrdersSerializer(serializers.ModelSerializer):
-    order_items = OrderItemSerializer(many=True, read_only=True, source='order_item')
+class FillOrderSerializer(serializers.ModelSerializer):
+    order_items = OrderItemSerializer(many=True, read_only=True)
     delivery = DeliverySerializer(read_only=True)
+    # payment_method = serializers.CharField(source='payment_method', read_only=True, allow_null=True)  # need to change over choice
 
     class Meta:
         model = Order
-        fields = "id", "user", "order_items", "saved_total_price", "status", "date_create", "delivery"
+        fields = ("id", "user", "order_items", "saved_total_price",
+                  "payment_method", "delivery", "order_status")
 
+
+class CartSerializer(serializers.ModelSerializer):
+    cart_items = CartItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = "id", "user", "total_price", "cart_items"
+
+
+class OnlinePaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OnlinePayment
+        fields = "__all__"
+
+
+class OrdersSerializer(serializers.ModelSerializer):
+    order_items = OrderItemSerializer(many=True, read_only=True, source='order_item')
+    delivery = DeliverySerializer(read_only=True)
+    # online_payment = serializers.SerializerMethodField(method_name='get_online_payment')
+    # online_payment = OnlinePaymentSerializer(read_only=True)
+
+    class Meta:
+        model = Order
+        fields = ("id", "user", "order_items", "saved_total_price", "order_status", "date_create", "payment_method",
+                  "online_payment", "delivery")
+
+    # def get_online_payment(self, obj):
+    #     return obj.online_payment.invoice_url if obj.online_payment else None
+
+    # def get_online_payment(self, obj):
+    #     if obj.order_status in ['Cancelled', 'Finished', 'New'] or obj.payment_method != 'Online payment':
+    #         return OnlinePaymentSerializer(obj.online_payment).data
+    #     return self.get_online_payment_status(obj)
+    #
+    # def get_online_payment_status(self, obj):
+    #     if not obj.online_payment:
+    #         obj.online_payment = OnlinePayment.objects.create(invoice_url=None, payment_status='Pending')
+    #         return OnlinePaymentSerializer(obj.online_payment).data
+    #     if obj.online_payment.payment_status in ['Cancelled', 'Refunded', 'Finished']:
+    #         return "Finished"
+    #     if obj.online_payment.is_invoice_valid():
+    #         return obj.online_payment.invoice_url
+    #     if obj.online_payment.payment_status == 'Paid':
+    #         return 'Paid'
+    #     else:
+    #         self.cancel_order(obj)
+    #         return None
+    #
+    # def cancel_order(self, obj):
+    #     obj.online_payment.payment_status = 'Cancelled'
+    #     obj.order_status = 'Cancelled'
+    #     obj.online_payment.invoice_url = None
+    #     obj.online_payment.save()
+    #     obj.save()

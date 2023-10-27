@@ -27,6 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+MERCHANT_ID = 'test_merch_n1'  # os.getenv('MERCHANT_ID')
+PAYMENT_SECRET_KEY = 'flk3409refn54t54t*FNJRET'  # os.getenv('SECRET_KEY')
+
+# lifetime for invoices in minutes
+INVOICE_LIFETIME = 60 * 24
+
 # Application definition
 
 INSTALLED_APPS = [

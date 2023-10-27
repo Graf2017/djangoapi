@@ -19,7 +19,7 @@ router = routers.DefaultRouter()
 router.register(r'positions', ShowPositions, basename='positions')
 router.register(r'categories', ShowCategories, basename='show_categories')
 router.register(r'orders', ShowOrders, basename='history')
-router.register(r'delivery', ShowDelivery, basename='delivery')
+router.register(r'delivery', DeliveryView, basename='delivery')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/',
@@ -30,6 +30,14 @@ urlpatterns = [
              path('auth/', include('djoser.urls')),
              path('auth/', include('djoser.urls.authtoken')),  # /api/v1/auth/token/login/
              path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name="swagger-schema"),
-             path('cart/', ShowCart.as_view())
+             path('cart/', ShowCart.as_view()),
+             # path('initiate-payment/', InitiatePaymentView.as_view(), name='initiate-payment'),
+             path('payment-status/', PaymentStatusView.as_view(), name='payment-status'),
+             # path('delivery/', Delivery.as_view({'get': 'list', 'post': 'create'})),
+             path('create-order/', CreateCompleteOrder.as_view(), name='create-order'),
+             path('fill-order/<int:pk>/', FillOrder.as_view(), name='fill-order'),
+
+
+
          ])),
 ]

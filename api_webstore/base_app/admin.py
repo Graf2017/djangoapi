@@ -5,6 +5,12 @@ from django import forms
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
 
 
+class DeliveryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'first_name', 'last_name', 'phone', 'city', 'address', 'index')
+    list_filter = ('user', 'city', 'index')
+    fields = ('user', 'first_name', 'last_name', 'phone', 'city', 'address', 'index')
+
+
 class CustomUserCreateForm(UserCreationForm):
     id = forms.CharField(disabled=True, required=False)  # Додаємо поле 'id' як лише для відображення (readonly field)
 
@@ -103,10 +109,10 @@ class OrderItemInline(admin.StackedInline):
 
 class OrderAdmin(admin.ModelAdmin):
     # form = OrderAdminForm
-    fields = ['status', 'user', 'date_update', 'date_create', 'saved_total_price', 'delivery']
-    list_display = ['id', 'status', 'date_update', 'date_create']
-    list_display_links = ['id', 'status']
-    search_fields = ['date_create', 'status', 'date_update', 'date_create']
+    fields = ['order_status', 'user', 'date_update', 'date_create', 'saved_total_price', 'payment_method', 'delivery']
+    list_display = ['id', 'order_status', 'date_update', 'payment_method', 'date_create']
+    list_display_links = ['id', 'order_status']
+    search_fields = ['date_create', 'order_status', 'date_update', 'date_create']
     inlines = [OrderItemInline]
 
     def get_queryset(self, request):
@@ -124,7 +130,7 @@ class OrderAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if obj and isinstance(obj, Order):
             return (
-                'date_create', 'user', 'date_update', 'delivery',
+                'date_create', 'user', 'date_update', 'delivery', 'payment_method',
                 'saved_total_price')  # Make date_create and total_price fields read-only for existing orders
         return ('date_create',)
 
@@ -140,9 +146,11 @@ class CartItemAdmin(admin.ModelAdmin):
             return 'cart'
         return 'cart', 'position', 'quantity'
 
+
 admin.site.register(Position, PositionAdmin)
 admin.site.register(Categories)
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Image)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(CartItem, CartItemAdmin)
+admin.site.register(Delivery, DeliveryAdmin)

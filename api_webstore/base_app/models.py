@@ -1,9 +1,15 @@
 import os
+from django.utils import timezone
 
 from django.contrib.auth.models import User, AbstractUser, UserManager
 from django.contrib.auth.base_user import BaseUserManager
-from django.db import models
+from django.db import models, transaction
 from decimal import Decimal
+
+from api_webstore import settings
+
+
+number_of_first_order = 2141112
 
 
 class Position(models.Model):  # a product's position
@@ -134,8 +140,7 @@ class Delivery(models.Model):
     user = models.ForeignKey('CustomUser',
                              on_delete=models.CASCADE,
                              verbose_name='Delivery',
-                             related_name='delivery',
-                             editable=False)
+                             related_name='delivery')
     first_name = models.CharField(max_length=50,
                                   verbose_name='First name')
     last_name = models.CharField(max_length=50,
@@ -148,7 +153,7 @@ class Delivery(models.Model):
                                verbose_name='Address')
     index = models.CharField(max_length=10,
                              verbose_name='Index',
-                             blank=True)
+                             blank=True, null=True)
 
     def __str__(self):
         return f'{self.first_name} {self.last_name} - {self.phone}, {self.address}, {self.city}, {self.index}'
@@ -164,29 +169,54 @@ class Order(models.Model):
                                  on_delete=models.CASCADE,
                                  verbose_name='Delivery',
                                  related_name='delivery',
+                                 null=True
                                  )
-    status = models.CharField(max_length=20,
-                              choices=(
-                                  ('Pending', 'Pending'),
-                                  ('Confirmed', 'Confirmed'),
-                                  ('Shipped', 'Shipped'),
-                                  ('Delivered', 'Delivered'),
-                                  ('Finished', 'Finished'),
-                                  ('Canceled', 'Canceled'),
-                              ), default='Pending')
     date_create = models.DateTimeField(auto_now_add=True,
                                        verbose_name='Date create')
     date_update = models.DateTimeField(auto_now=True,
                                        verbose_name='Last update')
+    order_status = models.CharField(max_length=20,
+                                    choices=(
+                                        ('New', 'New'),
+                                        ('Pending', 'Pending'),
+                                        ('Confirmed', 'Confirmed'),
+                                        ('Shipped', 'Shipped'),
+                                        ('Delivered', 'Delivered'),
+                                        ('Finished', 'Finished'),
+                                        ('Canceled', 'Canceled'),
+                                    ), default='Pending')
+    payment_method = models.CharField(max_length=20,
+                                      choices=(
+                                          ('Cash on delivery', 'Cash on delivery'),
+                                          ('Online payment', 'Online payment')),
+                                      null=True)
+
+    # online_payment = models.OneToOneField('OnlinePayment',
+    #                                       on_delete=models.CASCADE,
+    #                                       verbose_name='Online payment',
+    #                                       related_name='online_payment',
+    #                                       null=True)
 
     @property
     def saved_total_price(self):
         return sum(item.saved_total_price for item in self.order_item.all())
 
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.id = self.generate_unique_order_number()
+        super().save(*args, **kwargs)
+
+    def generate_unique_order_number(self):
+        last_order = Order.objects.order_by('-id').first()
+        if last_order:
+            return last_order.id + 1
+        else:
+            return number_of_first_order
+
     def __str__(self):
         return f'Order № - {self.id} |' \
                f' - User: {self.user.email} id-{self.user.id}' \
-               f' | - Status: {self.status}'
+               f' | - Order status: {self.order_status}'
 
 
 class OrderItem(models.Model):  # save the data of a Position in the time of ordering
@@ -224,7 +254,7 @@ class Cart(models.Model):
 
     @property
     def total_price(self):
-        return sum(item.total_price for item in self.cart_items.all())
+        return sum(item.total_price for item in self.cart_item.all())
 
 
 class CartItem(models.Model):
@@ -234,7 +264,7 @@ class CartItem(models.Model):
     quantity = models.PositiveSmallIntegerField(default=0)
     cart = models.ForeignKey('Cart',
                              on_delete=models.CASCADE,
-                             related_name='cart_items')
+                             related_name='cart_item')
 
     def __str__(self):
         return f'{self.position.id}: {self.position.title}- {self.quantity}'
@@ -243,3 +273,26 @@ class CartItem(models.Model):
     def total_price(self):
         total_price = self.position.price * self.quantity
         return total_price
+
+
+class OnlinePayment(models.Model):
+    """визначаємо обєкт інвойса для оплати, та термін його дії.
+    Зв'язана модель з моделлю Order"""
+    order = models.OneToOneField('Order',
+                                 on_delete=models.CASCADE,
+                                 related_name='online_payment',
+                                 editable=False)
+    invoice_url = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    payment_status = models.CharField(max_length=20,
+                                      choices=(
+                                          ('Pending', 'Pending'),
+                                          ('Paid', 'Paid'),
+                                          ('Canceled', 'Canceled'),
+                                          ('Refunded', 'Refunded'),
+                                          ('Finished', 'Finished')
+                                      ), default='Pending')
+
+    def is_invoice_valid(self):
+        return self.created_at + timezone.timedelta(minutes=settings.INVOICE_LIFETIME) >= timezone.now()
+
