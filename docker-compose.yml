@@ -25,7 +25,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: base_app_db
+      POSTGRES_DB: api_webstore_db
     volumes:
       - db_data:/var/lib/postgresql/data
 
