@@ -2,6 +2,9 @@ from django.urls import path, include
 from rest_framework import routers
 import apps.product.views as base_views
 
+from django.conf.urls.static import static
+
+from django.conf import settings
 
 router = routers.DefaultRouter()
 router.register(r'positions', base_views.ShowPositions, basename='positions')
@@ -17,3 +20,6 @@ urlpatterns = [
          path('fill-order/<int:pk>/', base_views.FillOrder.as_view(), name='fill-order'),
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

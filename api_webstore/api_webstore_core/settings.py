@@ -91,24 +91,24 @@ WSGI_APPLICATION = 'api_webstore_core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
-
-
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'api_webstore_db',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db_postgresql', # db_postgresql
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'api_webstore_db',
+#         'USER': 'postgres',
+#         'PASSWORD': 'postgres',
+#         'HOST': 'db_postgresql', # db_postgresql
+#         'PORT': '5432',
+#     }
+# }
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 

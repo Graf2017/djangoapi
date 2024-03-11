@@ -1,24 +1,17 @@
 version: "3"
 
 services:
+
   app:
     build: .
     ports:
       - "8000:8000"
-    command: python /project/api_webstore/manage.py runserver 0.0.0.0:8000
-    entrypoint: >
-      sh -c "python /project/api_webstore/manage.py flush --no-input &&
-             python api_webstore/manage.py makemigrations &&
-             python api_webstore/manage.py migrate &&
-             python api_webstore/manage.py loaddata api_webstore/datadump.json &&
-             echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(email='test@gmail.com').exists() or User.objects.create_superuser('test@gmail.com', 'python')\" |
-             python api_webstore/manage.py shell &&
-             python api_webstore/manage.py runserver 0.0.0.0:8000"
-    
-
+    command: gunicorn --bind 0.0.0.0:8000 api_webstore_core.wsgi:application --chdir api_webstore/
     depends_on:
       - db_postgresql
+
   db_postgresql:
+    container_name: database_for_app
     image: postgres
     ports:
       - "5433:5432"
