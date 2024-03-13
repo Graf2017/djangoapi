@@ -9,6 +9,16 @@ services:
     command: gunicorn --bind 0.0.0.0:8000 api_webstore_core.wsgi:application --chdir api_webstore/
     depends_on:
       - db_postgresql
+#
+#  nginx:
+#    image: nginx:latest
+#    ports:
+#      - "80:80"
+#    restart: unless-stopped
+#    volumes:
+#      - www-html:/var/www/html
+#      - /home/north/opt/nginx-conf.d:/etc/nginx/conf/d
+#need to add code
 
   db_postgresql:
     container_name: database_for_app

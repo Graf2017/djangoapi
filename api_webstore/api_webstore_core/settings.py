@@ -19,13 +19,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-jx*nm15*q4#llv1#z1m%^t#o#9x9pxclajm*oo#92@f080&f%_'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
 
 MERCHANT_ID = 'test_merch_n1'  # os.getenv('MERCHANT_ID')
 PAYMENT_SECRET_KEY = 'flk3409refn54t54t*FNJRET'  # os.getenv('SECRET_KEY')
@@ -88,27 +81,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'api_webstore_core.wsgi.application'
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'api_webstore_db',
-#         'USER': 'postgres',
-#         'PASSWORD': 'postgres',
-#         'HOST': 'db_postgresql', # db_postgresql
-#         'PORT': '5432',
-#     }
-# }
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
@@ -145,7 +117,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = 'media/'
@@ -191,3 +163,8 @@ LOGGING = {
     }
 }
 '''
+
+try:
+    from .local_settings import *
+except ImportError:
+    from .prod_settings import *
