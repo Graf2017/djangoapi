@@ -7,3 +7,5 @@ venv
 initialize_commands.sh
 db.sqlite3
 prod_settings.py
+datadump.json
+
