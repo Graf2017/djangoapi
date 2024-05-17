@@ -3,9 +3,6 @@
 __pycache__
 venv
 .idea
-.env
-initialize_commands.sh
-db.sqlite3
-prod_settings.py
-datadump.json
-
+#.env
+/api_webstore/db.sqlite3
+/api_webstore/datadump.json

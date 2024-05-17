@@ -7,4 +7,4 @@ This system  allows to save the main characteristic and price at the time of ord
 If you want to see this project in action, a good option would be to use docker-compose.
 
 API documentation:
-http://127.0.0.1:8000/api/v1/swagger/
+http://127.127.127.127:1317/api/v1/swagger/

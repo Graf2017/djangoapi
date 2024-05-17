@@ -22,7 +22,7 @@ class PaymentStatusView(APIView):
         reason_code = request.data.get('reasonCode')
         if reason_code == 1100:
             order_number = request.data.get('orderReference')
-            print(str(request.data.get('transactionStatus')) + 'PaymentStaTUsview')  # testing, need to delete
+            # print(str(request.data.get('transactionStatus')) + 'PaymentStaTUsview')  # testing, need to delete
             try:
                 order = Order.objects.get(id=order_number)
             except Order.DoesNotExist:

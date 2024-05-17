@@ -3,34 +3,32 @@ version: "3"
 services:
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     command: gunicorn --bind 0.0.0.0:8000 api_webstore_core.wsgi:application --chdir api_webstore/
+    env_file:
+      .env.dev # ./.env.dev analog
+#    volumes:
+#      - .:/app # всі дані з поточного каталогу на моєму компі будуть монтуватися в контейнер. це будуть спільні дані. відкрити доступ контейнера до цих даних та змінювати їх
+#      - /app/modules
     depends_on:
       - db_postgresql
-#
-#  nginx:
-#    image: nginx:latest
-#    ports:
-#      - "80:80"
-#    restart: unless-stopped
-#    volumes:
-#      - www-html:/var/www/html
-#      - /home/north/opt/nginx-conf.d:/etc/nginx/conf/d
-#need to add code
 
   db_postgresql:
     container_name: database_for_app
     image: postgres
-    ports:
-      - "5433:5432"
+    expose:
+      - "5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: api_webstore_db
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data # те що на хості:те що в контейнері
+
 
 volumes:
   db_data:

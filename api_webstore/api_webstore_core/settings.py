@@ -19,10 +19,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
-MERCHANT_ID = 'test_merch_n1'  # os.getenv('MERCHANT_ID')
-PAYMENT_SECRET_KEY = 'flk3409refn54t54t*FNJRET'  # os.getenv('SECRET_KEY')
-PAYMENT_URL = 'https://api.wayforpay.com/api'
+DEBUG = os.environ.get('DEBUG')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(' ')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS').split(' ')
+
+DATABASES = {
+    'default': {
+        'ENGINE': os.environ.get("ENGINE"),
+        'NAME': os.environ.get("NAME"),
+        'USER': os.environ.get("USER"),
+        'PASSWORD': os.environ.get("PASSWORD"),
+        'HOST': os.environ.get("HOST"),
+        'PORT': os.environ.get("PORT"),
+    }
+}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
+MERCHANT_ID = os.getenv('MERCHANT_ID')
+PAYMENT_SECRET_KEY = os.getenv('SECRET_KEY')
+PAYMENT_URL = os.getenv('PAYMENT_URL')
 
 # lifetime for invoices in minutes
 INVOICE_LIFETIME = 60 * 24
@@ -116,8 +138,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
-STATIC_URL = 'static/'
-
+STATIC_URL = 'staticfiles/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = 'media/'
@@ -164,7 +186,3 @@ LOGGING = {
 }
 '''
 
-try:
-    from .local_settings import *
-except ImportError:
-    from .prod_settings import *
