@@ -1,10 +1,10 @@
 # djangoapi
-This is an API for an e-commerce platform. The main focus is on the backend.
-The order system was designed by me, but it may and will be modified in the future.
-This system  allows to save the main characteristic and price at the time of order creation. 
+This API is designed for an e-commerce platform, primarily focusing on backend functionality.
+The project includes an integrated online payment system and order management features.
+The system captures and stores the main characteristics and prices of products at the time of order creation,
+effectively serving as a snapshot of the product description when the order is made. 
 
-
-If you want to see this project in action, a good option would be to use docker-compose.
+While the project requires refactoring, it is functional and can be deployed in its current state.
 
 API documentation:
 http://127.127.127.127:1317/api/v1/swagger/
